@@ -4,7 +4,10 @@ import kpi.ipt.labs.distributed.twophasecommit.domain.FlyBooking;
 import kpi.ipt.labs.distributed.twophasecommit.domain.HotelBooking;
 
 import java.sql.*;
-import java.util.UUID;
+import java.sql.Date;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class BookingTransactionManager {
 
@@ -35,20 +38,38 @@ public class BookingTransactionManager {
             Connection flyConn = getConnection(flyConnInfo);
             Connection hotelConn = getConnection(hotelConnInfo);
 
-            String flyTxId = generateTransactionId();
-
+            //TODO: rewrite this shit. Support smart rollback (depending on the state of transaction - prepared/not prepared).
             insertFlyBooking(flyConn, flyBooking);
-            prepareTransaction(flyConn, flyTxId);
+            insertHotelBooking(hotelConn, hotelBooking);
 
-            try {
-                insertHotelBooking(hotelConn, hotelBooking);
+            Queue<Connection> preparationQueue = new LinkedList<>();
+            preparationQueue.add(flyConn);
+            preparationQueue.add(hotelConn);
 
-                hotelConn.commit();
-                commitPrepared(flyConn, flyTxId);
-            } catch (SQLException e) {
-                rollbackPrepared(flyConn, flyTxId);
+            List<Entry<Connection, String>> prepared = new ArrayList<>();
+            boolean rollback = false;
 
-                throw e;
+            SQLException reThrow = null;
+            while (!preparationQueue.isEmpty()) {
+                Connection connection = preparationQueue.poll();
+
+                try {
+                    prepared.add(new SimpleEntry<>(connection, prepareTransaction(connection)));
+                } catch (SQLException e) {
+                    //return to unprocessed
+                    preparationQueue.add(connection);
+
+                    rollback = true;
+                    reThrow = e;
+                    break;
+                }
+            }
+
+            if (rollback) {
+                //1. simple rollback for connections from the queue
+                //2. ROLLBACK prepared for connections from the processed list
+            } else {
+
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -80,10 +101,14 @@ public class BookingTransactionManager {
         }
     }
 
-    private static void prepareTransaction(Connection connection, String transactionId) throws SQLException {
+    private static String prepareTransaction(Connection connection) throws SQLException {
+        String transactionId = generateTransactionId();
+
         try (Statement prepareTransactionStmt = connection.createStatement()) {
             prepareTransactionStmt.execute("PREPARE TRANSACTION '" + transactionId + "'");
         }
+
+        return transactionId;
     }
 
     private static void commitPrepared(Connection connection, String transactionId) throws SQLException {
