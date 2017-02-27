@@ -1,4 +1,4 @@
-package kpi.ipt.labs.distributed.twophasecommit.db;
+package kpi.ipt.labs.distributed.twophasecommit;
 
 public class ConnectionInfo {
 
