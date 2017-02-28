@@ -1,16 +1,17 @@
 package kpi.ipt.labs.distributed.twophasecommit.transaction.jdbc;
 
-import kpi.ipt.labs.distributed.twophasecommit.transaction.TransactionalResource;
+import kpi.ipt.labs.distributed.twophasecommit.transaction.TransactionResource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Objects;
 
-public class PgConnectionResource implements TransactionalResource {
+public class PgConnectionResource implements TransactionResource {
 
     private final Connection connection;
     private String transactionId;
+    private boolean prepared = false;
 
     public PgConnectionResource(Connection connection) throws SQLException {
         this.connection = connection;
@@ -18,12 +19,21 @@ public class PgConnectionResource implements TransactionalResource {
     }
 
     @Override
-    public void prepare(String transactionId) {
-        try {
-            prepareTransaction(this.connection, Objects.requireNonNull(transactionId));
+    public void begin(String transactionId) {
+        this.transactionId = Objects.requireNonNull(transactionId);
+    }
 
-            //store into local field only after successful preparation
-            this.transactionId = transactionId;
+    @Override
+    public void end() {
+        //do nothing
+    }
+
+    @Override
+    public void prepare() {
+        try {
+            prepareTransaction(this.connection, this.transactionId);
+
+            this.prepared = true;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -43,10 +53,10 @@ public class PgConnectionResource implements TransactionalResource {
     @Override
     public void rollback() {
         try {
-            if (this.transactionId == null) {
-                this.connection.rollback();
-            } else {
+            if (prepared) {
                 rollbackPrepared(this.connection, this.transactionId);
+            } else {
+                this.connection.rollback();
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

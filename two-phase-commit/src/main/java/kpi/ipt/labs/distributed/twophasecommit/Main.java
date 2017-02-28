@@ -5,8 +5,8 @@ import kpi.ipt.labs.distributed.twophasecommit.domain.HotelBooking;
 import kpi.ipt.labs.distributed.twophasecommit.service.BookingService;
 import kpi.ipt.labs.distributed.twophasecommit.service.FlyBookingService;
 import kpi.ipt.labs.distributed.twophasecommit.service.HotelBookingService;
-import kpi.ipt.labs.distributed.twophasecommit.service.impl.PgFlyBookingService;
-import kpi.ipt.labs.distributed.twophasecommit.service.impl.PgHotelBookingService;
+import kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.postgres.PgFlyBookingService;
+import kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.postgres.PgHotelBookingService;
 
 import java.util.Date;
 

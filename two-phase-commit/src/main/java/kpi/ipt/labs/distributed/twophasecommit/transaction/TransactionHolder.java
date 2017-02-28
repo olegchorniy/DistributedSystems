@@ -4,10 +4,6 @@ public class TransactionHolder {
 
     private static final ThreadLocal<Transaction> currentTransaction = new ThreadLocal<>();
 
-    public static void enlistInCurrentTransaction(TransactionalResource resource) {
-        currentTransaction().enlistResource(resource);
-    }
-
     public static Transaction beginTransaction() {
         Transaction currentTx = new Transaction();
         currentTransaction.set(currentTx);

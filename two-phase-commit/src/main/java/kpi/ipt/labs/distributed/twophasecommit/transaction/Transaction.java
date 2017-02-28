@@ -6,10 +6,15 @@ import java.util.UUID;
 
 public class Transaction {
 
-    private final List<TransactionalResource> enlistedResources = new ArrayList<>();
+    private final List<TransactionResource> registeredResources = new ArrayList<>();
 
-    public void enlistResource(TransactionalResource resource) {
-        this.enlistedResources.add(resource);
+    public void enlistResource(TransactionResource resource) {
+        this.registeredResources.add(resource);
+        resource.begin(generateTransactionId());
+    }
+
+    public void delistResource(TransactionResource resource) {
+        resource.end();
     }
 
     public void commit() {
@@ -23,8 +28,8 @@ public class Transaction {
     private void doCommit() {
         //1. prepare
         try {
-            for (TransactionalResource resource : enlistedResources) {
-                resource.prepare(generateTransactionId());
+            for (TransactionResource resource : registeredResources) {
+                resource.prepare();
             }
         } catch (Exception e) {
             doRollback();
@@ -32,19 +37,21 @@ public class Transaction {
         }
 
         //2. commit
-        for (TransactionalResource resource : enlistedResources) {
+        for (TransactionResource resource : registeredResources) {
             try {
                 resource.commit();
             } catch (Exception e) {
+                System.out.println("*********** While commit ***********");
                 e.printStackTrace();
             }
         }
 
         //3. close
-        for (TransactionalResource resource : enlistedResources) {
+        for (TransactionResource resource : registeredResources) {
             try {
                 resource.close();
             } catch (Exception e) {
+                System.out.println("*********** While close ***********");
                 e.printStackTrace();
             }
         }
@@ -59,7 +66,7 @@ public class Transaction {
     }
 
     private void doRollback() {
-        for (TransactionalResource resource : enlistedResources) {
+        for (TransactionResource resource : registeredResources) {
             try {
                 resource.rollback();
             } catch (Exception e) {

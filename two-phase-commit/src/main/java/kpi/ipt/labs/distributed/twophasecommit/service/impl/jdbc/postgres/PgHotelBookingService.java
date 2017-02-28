@@ -1,8 +1,9 @@
-package kpi.ipt.labs.distributed.twophasecommit.service.impl;
+package kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.postgres;
 
 import kpi.ipt.labs.distributed.twophasecommit.ConnectionInfo;
 import kpi.ipt.labs.distributed.twophasecommit.domain.HotelBooking;
 import kpi.ipt.labs.distributed.twophasecommit.service.HotelBookingService;
+import kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.Utils;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
