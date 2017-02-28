@@ -19,8 +19,8 @@ public class BookingService {
         Transaction tx = TransactionHolder.beginTransaction();
 
         try {
-            int hotelBookingId = hotelBookingService.bookHotel(hotelBooking);
             int flyBookingId = flyBookingService.bookFlight(flyBooking);
+            int hotelBookingId = hotelBookingService.bookHotel(hotelBooking);
 
             flyBooking.setId(flyBookingId);
             hotelBooking.setId(hotelBookingId);

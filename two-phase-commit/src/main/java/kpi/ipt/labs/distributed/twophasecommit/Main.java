@@ -5,13 +5,12 @@ import kpi.ipt.labs.distributed.twophasecommit.domain.HotelBooking;
 import kpi.ipt.labs.distributed.twophasecommit.service.BookingService;
 import kpi.ipt.labs.distributed.twophasecommit.service.FlyBookingService;
 import kpi.ipt.labs.distributed.twophasecommit.service.HotelBookingService;
-import kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.mysql.MysqlHotelBookingService;
 import kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.postgres.PgFlyBookingService;
+import kpi.ipt.labs.distributed.twophasecommit.service.impl.jdbc.postgres.PgHotelBookingService;
 
 import java.util.Date;
 
 public class Main {
-
 
     static {
         try {
@@ -23,15 +22,14 @@ public class Main {
 
     public static void main(String[] args) {
         FlyBookingService flyBookingService = new PgFlyBookingService(BookingConnections.flyConnectionInfo);
-        HotelBookingService hotelBookingService = new MysqlHotelBookingService(BookingConnections.mysqlHotelConnectionInfo);
-
-        //HotelBookingService hotelBookingService = new PgHotelBookingService(hotelConnectionInfo);
+        //HotelBookingService hotelBookingService = new MysqlHotelBookingService(BookingConnections.mysqlHotelConnectionInfo);
+        HotelBookingService hotelBookingService = new PgHotelBookingService(BookingConnections.hotelConnectionInfo);
 
         BookingService bookingService = new BookingService(flyBookingService, hotelBookingService);
 
-        //successfulCase(bookingService);
+        successfulCase(bookingService);
         //failureAtFirstTransaction(bookingService);
-        failureAtSecondTransaction(bookingService);
+        //failureAtSecondTransaction(bookingService);
     }
 
     private static void successfulCase(BookingService bookingService) {
