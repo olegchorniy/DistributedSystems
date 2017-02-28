@@ -30,6 +30,15 @@ final public class Utils {
         throw new IllegalStateException("Generated key couldn't be obtained");
     }
 
+    public static int extractGeneratedId(int columnIndex, PreparedStatement insertStmt) throws SQLException {
+        ResultSet generatedKeys = insertStmt.getGeneratedKeys();
+        if (generatedKeys.next()) {
+            return generatedKeys.getInt(columnIndex);
+        }
+
+        throw new IllegalStateException("Generated key couldn't be obtained");
+    }
+
     public static Date toSqlDate(java.util.Date date) {
         if (date == null) {
             return null;
