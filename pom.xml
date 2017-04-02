@@ -11,6 +11,7 @@
 
     <modules>
         <module>two-phase-commit</module>
+        <module>distributed-computions</module>
     </modules>
 
     <dependencyManagement>
