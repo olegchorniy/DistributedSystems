@@ -15,7 +15,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-public class HazelcastIntegralCalculator implements DistributedIntegralCalculator {
+public class MemberTargetedIntegralCalculator implements DistributedIntegralCalculator {
 
     private static final String INTEGRAL_CALCULATOR_EXECUTOR = "integral-calculator-executor";
     private static final double INTERVAL_PER_NODE = 1.5;
@@ -24,7 +24,7 @@ public class HazelcastIntegralCalculator implements DistributedIntegralCalculato
     private final IExecutorService executorService;
     private final SubmitStrategy submitStrategy;
 
-    public HazelcastIntegralCalculator(HazelcastInstance hazelcast) {
+    public MemberTargetedIntegralCalculator(HazelcastInstance hazelcast) {
         this.hazelcast = hazelcast;
         this.executorService = hazelcast.getExecutorService(INTEGRAL_CALCULATOR_EXECUTOR);
         this.submitStrategy = new MemberSelectorBasedSubmitStrategy(new RoundRobinMemberSelector());
@@ -63,7 +63,7 @@ public class HazelcastIntegralCalculator implements DistributedIntegralCalculato
         }
 
         return partialResults.stream()
-                .mapToDouble(HazelcastIntegralCalculator::getResult)
+                .mapToDouble(MemberTargetedIntegralCalculator::getResult)
                 .sum();
     }
 
