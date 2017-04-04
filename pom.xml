@@ -12,6 +12,7 @@
     <modules>
         <module>two-phase-commit</module>
         <module>distributed-computions</module>
+        <module>rabbitmq</module>
     </modules>
 
     <dependencyManagement>
