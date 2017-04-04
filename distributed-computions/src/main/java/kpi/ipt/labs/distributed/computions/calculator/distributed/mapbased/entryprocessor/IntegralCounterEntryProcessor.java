@@ -22,7 +22,7 @@ public class IntegralCounterEntryProcessor implements EntryProcessor<Interval, O
     @Override
     public Double process(Map.Entry<Interval, Object> entry) {
         Interval interval = entry.getKey();
-        System.out.println("Process interval: " + interval);
+        System.out.println("[Entry processor] Process interval: " + interval);
 
         return calculator.calculate(function, interval.getLeftBound(), interval.getRightBound());
     }

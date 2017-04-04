@@ -7,6 +7,7 @@ import kpi.ipt.labs.distributed.computions.calculator.distributed.mapbased.calla
 import kpi.ipt.labs.distributed.computions.calculator.distributed.mapbased.entryprocessor.EntryProcessorIntegralCalculator;
 import kpi.ipt.labs.distributed.computions.calculator.distributed.targeted.CallbackTargetedIntegralCalculator;
 import kpi.ipt.labs.distributed.computions.calculator.distributed.targeted.MemberTargetedIntegralCalculator;
+import kpi.ipt.labs.distributed.computions.calculator.local.RealFunction;
 
 public class ClientNode {
     public static void main(String[] args) {
@@ -19,8 +20,12 @@ public class ClientNode {
                 new EntryProcessorIntegralCalculator(instance)
         };
 
+        RealFunction square = x -> x * x;
+        double leftBound = 0.0;
+        double rightBound = 30.0;
+
         for (int i = 0; i < calculators.length; i++) {
-            System.out.println("Result " + i + " : " + calculators[i].calculateSync(x -> x * x, 0, 30));
+            System.out.println("Result " + i + " : " + calculators[i].calculateSync(square, leftBound, rightBound));
         }
 
         instance.shutdown();

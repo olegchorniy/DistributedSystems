@@ -47,7 +47,7 @@ public class CallbackTargetedIntegralCalculator implements DistributedIntegralCa
                 @Override
                 public void onResponse(Double response) {
 
-                    System.out.println("Partial result received: [" + response + "]");
+                    System.out.println("[Callback based] Partial result received: [" + response + "]");
 
                     integralSum.add(response);
                     latch.countDown();

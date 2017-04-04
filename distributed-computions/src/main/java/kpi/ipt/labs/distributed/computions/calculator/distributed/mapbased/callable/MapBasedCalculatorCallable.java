@@ -38,11 +38,11 @@ public class MapBasedCalculatorCallable implements Callable<Double>, Serializabl
         Set<Interval> localKeySet = map.localKeySet();
 
         double localIntegralValue = localKeySet.stream()
-                .peek(interval -> System.out.printf("[%s], interval = %s, %n", localMember, interval))
+                .peek(interval -> System.out.printf("[Map based callable][%s], interval = %s%n", localMember, interval))
                 .mapToDouble(this::integralOnInterval)
                 .sum();
 
-        System.out.printf("[%s], integral over %d intervals = %.3f%n",
+        System.out.printf("[Map based callable][%s], integral over %d intervals = %.3f%n",
                 localMember,
                 localKeySet.size(),
                 localIntegralValue

@@ -31,7 +31,7 @@ public class IntegralCalculatorCallable implements Callable<Double>, Serializabl
     public Double call() throws Exception {
         double integralValue = calculator.calculate(function, from, to);
 
-        System.out.printf("[%s], integral from %.3f to %.3f = %.3f%n",
+        System.out.printf("[Targeted callable][%s], integral from %.3f to %.3f = %.3f%n",
                 hazelcastInstance.getCluster().getLocalMember(),
                 from, to, integralValue);
 
