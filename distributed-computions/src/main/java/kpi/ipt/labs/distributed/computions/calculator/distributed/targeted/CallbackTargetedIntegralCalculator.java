@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.LongAdder;
 public class CallbackTargetedIntegralCalculator implements DistributedIntegralCalculator {
 
     private static final String INTEGRAL_CALCULATOR_EXECUTOR = "integral-calculator-executor";
-    private static final double INTERVAL_PER_NODE = 1.5;
 
     private final IExecutorService executorService;
 

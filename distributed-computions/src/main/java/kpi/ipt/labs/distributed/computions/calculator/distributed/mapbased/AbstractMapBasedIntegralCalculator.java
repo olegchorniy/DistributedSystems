@@ -14,8 +14,6 @@ abstract public class AbstractMapBasedIntegralCalculator implements DistributedI
     private static final Serializable STUB_VALUE = new Serializable() {};
     // @formatter:on
 
-    private static final double INTERVAL_PER_NODE = 1.5;
-
     private final HazelcastInstance hazelcast;
 
     public AbstractMapBasedIntegralCalculator(HazelcastInstance hazelcast) {
