@@ -1,12 +1,13 @@
-package kpi.ipt.labs.distributed.rabbitmq.direct;
+package kpi.ipt.labs.distributed.rabbitmq.publishsubscribe;
 
 import com.rabbitmq.client.*;
 
 import java.io.IOException;
 
-import static kpi.ipt.labs.distributed.rabbitmq.direct.DirectConstants.*;
+import static kpi.ipt.labs.distributed.rabbitmq.publishsubscribe.PublishSubscribeConstants.EXCHANGE_NAME;
 
-public class DirectConsumer {
+
+public class Subscriber {
 
     public static void main(String[] args) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
@@ -14,21 +15,17 @@ public class DirectConsumer {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
-        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-        channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
+        channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
+        String queueName = channel.queueDeclare().getQueue();
+        channel.queueBind(queueName, EXCHANGE_NAME, "");
 
-        boolean autoAck = false;
-        channel.basicConsume(QUEUE_NAME, autoAck, new DefaultConsumer(channel) {
+        channel.basicConsume(queueName, true, new DefaultConsumer(channel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body) throws IOException {
                 System.out.println("Received '" + new String(body, "UTF-8") + "'");
-
-                /* Use this only with autoAck = false */
-                channel.basicAck(envelope.getDeliveryTag(), false);
             }
         });
     }

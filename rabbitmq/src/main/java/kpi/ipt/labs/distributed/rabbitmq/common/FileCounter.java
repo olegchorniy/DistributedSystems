@@ -6,14 +6,23 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class FileCounter {
+public class FileCounter implements MonotonicCounter {
 
     private final Path counterPath;
 
     public FileCounter(Path counterPath) {
+        if (!Files.exists(counterPath)) {
+            throw new IllegalStateException(counterPath + " doesn't exist.");
+        }
+
+        if (!Files.isRegularFile(counterPath)) {
+            throw new IllegalStateException(counterPath + " is not a file.");
+        }
+
         this.counterPath = counterPath;
     }
 
+    @Override
     public int getAndIncrement() {
         try {
             int oldValue = read();

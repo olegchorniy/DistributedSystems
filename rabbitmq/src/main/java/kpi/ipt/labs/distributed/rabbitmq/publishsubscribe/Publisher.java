@@ -1,4 +1,4 @@
-package kpi.ipt.labs.distributed.rabbitmq.direct;
+package kpi.ipt.labs.distributed.rabbitmq.publishsubscribe;
 
 import com.rabbitmq.client.BuiltinExchangeType;
 import com.rabbitmq.client.Channel;
@@ -8,10 +8,9 @@ import kpi.ipt.labs.distributed.rabbitmq.common.FileCounter;
 
 import java.nio.file.Paths;
 
-import static kpi.ipt.labs.distributed.rabbitmq.direct.DirectConstants.EXCHANGE_NAME;
-import static kpi.ipt.labs.distributed.rabbitmq.direct.DirectConstants.ROUTING_KEY;
+import static kpi.ipt.labs.distributed.rabbitmq.publishsubscribe.PublishSubscribeConstants.EXCHANGE_NAME;
 
-public class DirectProducer {
+public class Publisher {
 
     public static void main(String[] args) throws Exception {
 
@@ -21,10 +20,10 @@ public class DirectProducer {
 
         try (Connection connection = factory.newConnection()) {
             Channel channel = connection.createChannel();
-            channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
+            channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT);
 
-            String message = "[P/C] Hello World #" + counter.getAndIncrement();
-            channel.basicPublish(EXCHANGE_NAME, ROUTING_KEY, null, message.getBytes());
+            String message = "[Publisher/Subscriber] Hello World #" + counter.getAndIncrement();
+            channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes());
 
             System.out.println("Sent '" + message + "'");
             channel.close();
