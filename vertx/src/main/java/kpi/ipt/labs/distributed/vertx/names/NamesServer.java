@@ -21,8 +21,7 @@ import kpi.ipt.labs.distributed.vertx.NamesConstants;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 
 public class NamesServer extends AbstractVerticle {
 
@@ -76,6 +75,9 @@ public class NamesServer extends AbstractVerticle {
         router.put(NamesConstants.NAMES_ENDPOINT)
                 .handler(this::putName);
 
+        router.get("/health")
+                .handler(this::healthCheck);
+
         return router;
     }
 
@@ -104,6 +106,14 @@ public class NamesServer extends AbstractVerticle {
 
         names.add(name);
         response.setStatusCode(CREATED.code()).end();
+    }
+
+    private void healthCheck(RoutingContext context) {
+        LOGGER.info("Health check request");
+
+        context.response()
+                .setStatusCode(OK.code())
+                .end();
     }
 
     private JsonObject getBody(RoutingContext context) {

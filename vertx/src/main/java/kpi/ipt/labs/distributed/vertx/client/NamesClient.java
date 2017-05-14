@@ -18,23 +18,18 @@ import java.util.Collections;
 
 public class NamesClient {
 
+    private static final String CIRCUIT_BREAKER_NAME = "get-names-circuit-breaker";
+
     private HttpClient client;
     private CircuitBreaker circuitBreaker;
 
+    public NamesClient(HttpClient client, Vertx vertx) {
+        this.client = client;
+        this.circuitBreaker = CircuitBreaker.create(CIRCUIT_BREAKER_NAME, vertx, defaultCircuitBreakerOptions());
+    }
+
     public NamesClient(String defaultHost, Vertx vertx) {
-        HttpClientOptions clientOptions = new HttpClientOptions()
-                .setDefaultHost(defaultHost)
-                .setDefaultPort(NamesConstants.SERVER_PORT);
-
-        this.client = vertx.createHttpClient(clientOptions);
-
-        this.circuitBreaker = CircuitBreaker.create("get-names-circuit-breaker", vertx,
-                new CircuitBreakerOptions()
-                        .setMaxFailures(5)
-                        .setTimeout(1000)
-                        .setFallbackOnFailure(true)
-                        .setResetTimeout(10000)
-        );
+        this(vertx.createHttpClient(defaultClientOptions(defaultHost)), vertx);
     }
 
     public void close() {
@@ -85,5 +80,19 @@ public class NamesClient {
 
     private static <T> Handler<Throwable> exceptionHandler(Handler<AsyncResult<T>> handler) {
         return t -> handler.handle(Future.failedFuture(t));
+    }
+
+    private static CircuitBreakerOptions defaultCircuitBreakerOptions() {
+        return new CircuitBreakerOptions()
+                .setMaxFailures(5)
+                .setTimeout(1000)
+                .setFallbackOnFailure(true)
+                .setResetTimeout(10000);
+    }
+
+    private static HttpClientOptions defaultClientOptions(String defaultHost) {
+        return new HttpClientOptions()
+                .setDefaultHost(defaultHost)
+                .setDefaultPort(NamesConstants.SERVER_PORT);
     }
 }

@@ -1,0 +1,33 @@
+1. Consul settings
+
+    {
+        "server": true,
+        "datacenter": "dc1",
+        "bootstrap_expect": 1,
+        "data_dir": "D:/servers/consul/data/alone",
+        "log_level": "INFO",
+        "bind_addr": "127.0.0.1",
+        "ui": true
+    }
+
+    Startup command:
+        consul agent -config-file <file_name>.json
+
+2. Service register/unregister requests:
+
+    Register:
+    PUT localhost:8500/v1/agent/service/register
+    {
+    	"ID": "names-service-1",
+    	"Name": "names-service",
+    	"Port": 8000,
+    	"Tags": ["http-endpoint"],
+    	"Check": {
+    		"Name": "Names service API",
+    		"HTTP": "http://localhost:8000/health",
+    		"Interval": "2s"
+    	}
+    }
+
+    Unregister:
+    PUT localhost:8500/v1/agent/service/deregister/names-service-1
