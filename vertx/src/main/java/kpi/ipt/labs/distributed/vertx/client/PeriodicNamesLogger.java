@@ -20,20 +20,19 @@ public class PeriodicNamesLogger extends AbstractVerticle {
 
         this.namesClient = new NamesClient(HOST, vertx);
 
-        vertx.setPeriodic(DELAY, id ->
-                namesClient.getNames(namesFuture -> {
-                    if (namesFuture.failed()) {
-                        LOGGER.warn("Unable to retrieve names list");
-                    } else {
-                        JsonArray names = namesFuture.result();
+        vertx.setPeriodic(DELAY, this::printNames);
+    }
 
-                        LOGGER.info("Fetched names: {0}", names);
-                    }
-                }));
+    private void printNames(long id) {
+        this.namesClient.getNamesWithCircuitBreaker(namesFuture -> {
+            if (namesFuture.failed()) {
+                LOGGER.warn("Unable to retrieve names list");
+            } else {
+                JsonArray names = namesFuture.result();
 
-        for (int i = 0; i < 3; i++) {
-            namesClient.addName("name #" + i, r -> System.out.println(r.succeeded()));
-        }
+                LOGGER.info("Fetched names: {0}", names);
+            }
+        });
     }
 
     @Override

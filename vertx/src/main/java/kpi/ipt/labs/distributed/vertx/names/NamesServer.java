@@ -95,7 +95,7 @@ public class NamesServer extends AbstractVerticle {
         }
 
         String name = body.getString("name");
-        LOGGER.info("Name '" + name + "' received");
+        LOGGER.info("Name {0} received", name);
 
         if (name == null) {
             response.setStatusCode(BAD_REQUEST.code()).end();
