@@ -24,16 +24,16 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
 import static io.netty.handler.codec.http.HttpResponseStatus.CREATED;
 
-public class NamesVerticle extends AbstractVerticle {
+public class NamesServer extends AbstractVerticle {
 
-    private static final Logger log = LoggerFactory.getLogger(NamesVerticle.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NamesServer.class);
 
     private HttpServer server;
     private List<String> names;
 
     @Override
     public void start(Future<Void> completeFuture) throws Exception {
-        log.info("Starting Names server");
+        LOGGER.info("Starting Names server");
 
         Router router = configureRouter();
 
@@ -44,11 +44,11 @@ public class NamesVerticle extends AbstractVerticle {
                 .requestHandler(router::accept)
                 .listen(NamesConstants.SERVER_PORT, res -> {
                     if (res.succeeded()) {
-                        log.info("Server started successfully");
+                        LOGGER.info("Server started successfully");
 
                         completeFuture.complete();
                     } else {
-                        log.info("Server failed to start", res.cause());
+                        LOGGER.info("Server failed to start", res.cause());
 
                         completeFuture.fail(res.cause());
                     }
@@ -95,7 +95,7 @@ public class NamesVerticle extends AbstractVerticle {
         }
 
         String name = body.getString("name");
-        log.info("Name '{0}' received", name);
+        LOGGER.info("Name '" + name + "' received");
 
         if (name == null) {
             response.setStatusCode(BAD_REQUEST.code()).end();
@@ -121,6 +121,6 @@ public class NamesVerticle extends AbstractVerticle {
     }
 
     public static void main(String[] args) {
-        Vertx.vertx().deployVerticle(new NamesVerticle());
+        Vertx.vertx().deployVerticle(new NamesServer());
     }
 }
