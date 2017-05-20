@@ -2,6 +2,7 @@ package kpi.ipt.labs.distributed.vertx.names;
 
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -24,6 +25,7 @@ import kpi.ipt.labs.distributed.vertx.NamesConstants;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
@@ -33,55 +35,84 @@ public class NamesServer extends AbstractVerticle {
     private static final Logger LOGGER = LoggerFactory.getLogger(NamesServer.class);
 
     private HttpServer server;
+    private ConsulClient consulClient;
     private List<String> names;
+
+    private String id;
+    private boolean registered = false;
 
     @Override
     public void start(Future<Void> completeFuture) throws Exception {
         LOGGER.info("Starting Names server");
 
+        this.id = UUID.randomUUID().toString();
         this.names = new CopyOnWriteArrayList<>();
+        this.consulClient = ConsulClient.create(getVertx());
 
         Router router = configureRouter();
-
-        ConsulClient consulClient = ConsulClient.create(vertx);
-
-        CheckOptions checkOptions = new CheckOptions()
-                .setName("Names service API")
-                .setHttp("http://localhost:" + NamesConstants.SERVER_PORT + "/health")
-                .setInterval("2s");
-
-        ServiceOptions serviceOptions = new ServiceOptions()
-                .setId("names-service-1")
-                .setName("names-service")
-                .setPort(NamesConstants.SERVER_PORT)
-                .setTags(Collections.singletonList(HttpEndpoint.TYPE))
-                .setCheckOptions(checkOptions);
-
-        consulClient.registerService(serviceOptions, res -> {
-            System.out.println("Registration result: " + res.succeeded());
-        });
 
         this.server = getVertx()
                 .createHttpServer(serverOptions())
                 .requestHandler(router::accept)
                 .listen(NamesConstants.SERVER_PORT, res -> {
                     if (res.succeeded()) {
-                        LOGGER.info("Server started successfully");
+                        registerInConsul();
 
+                        LOGGER.info("Server started successfully");
                         completeFuture.complete();
                     } else {
                         LOGGER.info("Server failed to start", res.cause());
-
                         completeFuture.fail(res.cause());
                     }
                 });
     }
 
+    private void registerInConsul() {
+
+        CheckOptions checkOptions = new CheckOptions()
+                .setName("Names service API")
+                .setHttp("http://localhost:" + NamesConstants.SERVER_PORT + NamesConstants.HEALTH_ENDPOINT)
+                .setInterval("2s");
+
+        ServiceOptions serviceOptions = new ServiceOptions()
+                .setId(this.id)
+                .setName("names-service")
+                .setPort(NamesConstants.SERVER_PORT)
+                .setTags(Collections.singletonList(HttpEndpoint.TYPE))
+                .setCheckOptions(checkOptions);
+
+        consulClient.registerService(serviceOptions, res -> {
+            if (res.succeeded()) {
+                registered = true;
+
+                LOGGER.info("Successfully registered in Consul");
+            } else {
+                LOGGER.warn("Registration in Consul failed");
+            }
+        });
+    }
+
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
-        names.clear();
-        //consulClient.deregisterService();
-        server.close(stopFuture.completer());
+        this.names.clear();
+
+        Future<Void> deregisterFuture = Future.succeededFuture();
+        Future<Void> serverClosingFuture = Future.future();
+
+        if (this.registered) {
+            deregisterFuture = Future.future();
+            this.consulClient.deregisterService(this.id, deregisterFuture.completer());
+        }
+
+        this.server.close(serverClosingFuture.completer());
+
+        CompositeFuture.all(deregisterFuture, serverClosingFuture).setHandler(result -> {
+            if (result.succeeded()) {
+                stopFuture.complete();
+            } else {
+                stopFuture.fail(result.cause());
+            }
+        });
     }
 
     private HttpServerOptions serverOptions() {
@@ -99,7 +130,7 @@ public class NamesServer extends AbstractVerticle {
         router.put(NamesConstants.NAMES_ENDPOINT)
                 .handler(this::putName);
 
-        router.get("/health")
+        router.get(NamesConstants.HEALTH_ENDPOINT)
                 .handler(this::healthCheck);
 
         return router;
