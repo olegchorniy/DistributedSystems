@@ -13,11 +13,16 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import io.vertx.ext.consul.CheckOptions;
+import io.vertx.ext.consul.ConsulClient;
+import io.vertx.ext.consul.ServiceOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.servicediscovery.types.HttpEndpoint;
 import kpi.ipt.labs.distributed.vertx.NamesConstants;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,9 +39,27 @@ public class NamesServer extends AbstractVerticle {
     public void start(Future<Void> completeFuture) throws Exception {
         LOGGER.info("Starting Names server");
 
+        this.names = new CopyOnWriteArrayList<>();
+
         Router router = configureRouter();
 
-        this.names = new CopyOnWriteArrayList<>();
+        ConsulClient consulClient = ConsulClient.create(vertx);
+
+        CheckOptions checkOptions = new CheckOptions()
+                .setName("Names service API")
+                .setHttp("http://localhost:" + NamesConstants.SERVER_PORT + "/health")
+                .setInterval("2s");
+
+        ServiceOptions serviceOptions = new ServiceOptions()
+                .setId("names-service-1")
+                .setName("names-service")
+                .setPort(NamesConstants.SERVER_PORT)
+                .setTags(Collections.singletonList(HttpEndpoint.TYPE))
+                .setCheckOptions(checkOptions);
+
+        consulClient.registerService(serviceOptions, res -> {
+            System.out.println("Registration result: " + res.succeeded());
+        });
 
         this.server = getVertx()
                 .createHttpServer(serverOptions())
@@ -57,6 +80,7 @@ public class NamesServer extends AbstractVerticle {
     @Override
     public void stop(Future<Void> stopFuture) throws Exception {
         names.clear();
+        //consulClient.deregisterService();
         server.close(stopFuture.completer());
     }
 
