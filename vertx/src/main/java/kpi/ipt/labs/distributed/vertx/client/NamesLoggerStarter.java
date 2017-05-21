@@ -76,10 +76,18 @@ public class NamesLoggerStarter {
     private static void deployNamesLogger(Vertx vertx, Future<NamesClient> clientFuture) {
         clientFuture.setHandler(namesClient -> {
             if (namesClient.succeeded()) {
+                populateInitialData(namesClient.result());
+
                 vertx.deployVerticle(new NamesLogger(namesClient.result()));
             } else {
                 LOGGER.error("Failed to start names logger", namesClient.cause());
             }
         });
+    }
+
+    private static void populateInitialData(NamesClient client) {
+        for (int i = 0; i < 3; i++) {
+            client.addName("Name #" + i, res -> System.out.println(res.succeeded()));
+        }
     }
 }
