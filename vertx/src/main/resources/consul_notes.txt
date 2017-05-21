@@ -35,6 +35,9 @@
 3. Get services list:
     GET localhost:8500/v1/catalog/services
 
+4. Health check request:
+    GET localhost:8500/v1/health/checks/names-service
+
 ======================= Cluster consul deployment =========================
 1. Config file:
 
@@ -58,3 +61,8 @@
 2. Commands:
     consul agent -config-file <N>.json
     consul join 127.0.0.<N>
+
+============================= Consul KV store ================================
+1. PUT: consul kv put my/key "my-value"
+2. GET: consul kv get -detailed my/key
+3. PUT with CAS: consul kv put -cas -modify-index=<IDX> my/key "my-value-2"

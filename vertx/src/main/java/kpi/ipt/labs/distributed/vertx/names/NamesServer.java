@@ -21,14 +21,13 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.servicediscovery.types.HttpEndpoint;
-import kpi.ipt.labs.distributed.vertx.NamesConstants;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static kpi.ipt.labs.distributed.vertx.NamesConstants.*;
 
 public class NamesServer extends AbstractVerticle {
 
@@ -45,7 +44,7 @@ public class NamesServer extends AbstractVerticle {
     public void start(Future<Void> completeFuture) throws Exception {
         LOGGER.info("Starting Names server");
 
-        this.id = UUID.randomUUID().toString();
+        this.id = SERVICE_NAME + ":localhost:" + SERVER_PORT;
         this.names = new CopyOnWriteArrayList<>();
         this.consulClient = ConsulClient.create(getVertx());
 
@@ -54,7 +53,7 @@ public class NamesServer extends AbstractVerticle {
         this.server = getVertx()
                 .createHttpServer(serverOptions())
                 .requestHandler(router::accept)
-                .listen(NamesConstants.SERVER_PORT, res -> {
+                .listen(SERVER_PORT, res -> {
                     if (res.succeeded()) {
                         registerInConsul();
 
@@ -71,13 +70,13 @@ public class NamesServer extends AbstractVerticle {
 
         CheckOptions checkOptions = new CheckOptions()
                 .setName("Names service API")
-                .setHttp("http://localhost:" + NamesConstants.SERVER_PORT + NamesConstants.HEALTH_ENDPOINT)
+                .setHttp("http://localhost:" + SERVER_PORT + HEALTH_ENDPOINT)
                 .setInterval("2s");
 
         ServiceOptions serviceOptions = new ServiceOptions()
                 .setId(this.id)
-                .setName("names-service")
-                .setPort(NamesConstants.SERVER_PORT)
+                .setName(SERVICE_NAME)
+                .setPort(SERVER_PORT)
                 .setTags(Collections.singletonList(HttpEndpoint.TYPE))
                 .setCheckOptions(checkOptions);
 
@@ -124,13 +123,13 @@ public class NamesServer extends AbstractVerticle {
 
         router.route().handler(BodyHandler.create());
 
-        router.get(NamesConstants.NAMES_ENDPOINT)
+        router.get(NAMES_ENDPOINT)
                 .handler(this::getNames);
 
-        router.put(NamesConstants.NAMES_ENDPOINT)
+        router.put(NAMES_ENDPOINT)
                 .handler(this::putName);
 
-        router.get(NamesConstants.HEALTH_ENDPOINT)
+        router.get(HEALTH_ENDPOINT)
                 .handler(this::healthCheck);
 
         return router;
