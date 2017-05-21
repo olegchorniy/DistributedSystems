@@ -28,8 +28,8 @@ public class NamesClient {
         this.circuitBreaker = CircuitBreaker.create(CIRCUIT_BREAKER_NAME, vertx, defaultCircuitBreakerOptions());
     }
 
-    public NamesClient(String defaultHost, Vertx vertx) {
-        this(vertx.createHttpClient(defaultClientOptions(defaultHost)), vertx);
+    public NamesClient(String defaultHost, int defaultPort, Vertx vertx) {
+        this(vertx.createHttpClient(defaultClientOptions(defaultHost, defaultPort)), vertx);
     }
 
     public void close() {
@@ -90,9 +90,9 @@ public class NamesClient {
                 .setResetTimeout(10000);
     }
 
-    private static HttpClientOptions defaultClientOptions(String defaultHost) {
+    private static HttpClientOptions defaultClientOptions(String defaultHost, int defaultPort) {
         return new HttpClientOptions()
                 .setDefaultHost(defaultHost)
-                .setDefaultPort(NamesConstants.SERVER_PORT);
+                .setDefaultPort(defaultPort);
     }
 }

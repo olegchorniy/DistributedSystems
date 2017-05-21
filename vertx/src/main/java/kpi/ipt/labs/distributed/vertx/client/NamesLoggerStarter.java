@@ -11,7 +11,9 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.consul.ConsulServiceImporter;
 import io.vertx.servicediscovery.types.HttpEndpoint;
-import kpi.ipt.labs.distributed.vertx.NamesConstants;
+
+import static kpi.ipt.labs.distributed.vertx.NamesConstants.SERVER_PORT;
+import static kpi.ipt.labs.distributed.vertx.NamesConstants.SERVICE_NAME;
 
 public class NamesLoggerStarter {
 
@@ -26,7 +28,7 @@ public class NamesLoggerStarter {
     }
 
     private static void deployDefaultNamesLogger(Vertx vertx) {
-        deployNamesLogger(vertx, Future.succeededFuture(new NamesClient(HOST, vertx)));
+        deployNamesLogger(vertx, Future.succeededFuture(new NamesClient(HOST, SERVER_PORT, vertx)));
     }
 
     private static void deployNamesLoggerWithServiceDiscovery(Vertx vertx) {
@@ -68,7 +70,7 @@ public class NamesLoggerStarter {
 
     private static void findNamesService(ServiceDiscovery serviceDiscovery, Handler<AsyncResult<HttpClient>> handler) {
         JsonObject serviceFilter = new JsonObject()
-                .put("name", NamesConstants.SERVICE_NAME);
+                .put("name", SERVICE_NAME);
 
         HttpEndpoint.getClient(serviceDiscovery, serviceFilter, handler);
     }
