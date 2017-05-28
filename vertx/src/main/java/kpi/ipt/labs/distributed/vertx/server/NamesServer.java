@@ -1,4 +1,4 @@
-package kpi.ipt.labs.distributed.vertx.names;
+package kpi.ipt.labs.distributed.vertx.server;
 
 import io.netty.handler.codec.http.HttpHeaderValues;
 import io.vertx.core.AbstractVerticle;
@@ -20,6 +20,8 @@ import io.vertx.ext.consul.ServiceOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.servicediscovery.Record;
+import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.types.HttpEndpoint;
 
 import java.util.Collections;
@@ -55,7 +57,9 @@ public class NamesServer extends AbstractVerticle {
                 .requestHandler(router::accept)
                 .listen(SERVER_PORT, res -> {
                     if (res.succeeded()) {
+
                         registerInConsul();
+                        registerInVertx();
 
                         LOGGER.info("Server started successfully");
                         completeFuture.complete();
@@ -87,6 +91,25 @@ public class NamesServer extends AbstractVerticle {
                 LOGGER.info("Successfully registered in Consul");
             } else {
                 LOGGER.warn("Registration in Consul failed");
+            }
+        });
+    }
+
+    private void registerInVertx() {
+        ServiceDiscovery discovery = ServiceDiscovery.create(vertx);
+
+        Record serviceRecord = HttpEndpoint.createRecord(
+                SERVICE_NAME,
+                "localhost",
+                SERVER_PORT,
+                NAMES_ENDPOINT
+        );
+
+        discovery.publish(serviceRecord, res -> {
+            if (res.succeeded()) {
+                LOGGER.info("REST API published");
+            } else {
+                LOGGER.warn("Unable to publish the REST API: " + res.cause().getMessage());
             }
         });
     }

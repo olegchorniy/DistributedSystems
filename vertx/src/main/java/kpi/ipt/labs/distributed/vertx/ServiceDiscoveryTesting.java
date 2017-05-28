@@ -1,4 +1,4 @@
-package kpi.ipt.labs.distributed.vertx.client;
+package kpi.ipt.labs.distributed.vertx;
 
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -10,7 +10,7 @@ import io.vertx.core.logging.LoggerFactory;
 import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.consul.ConsulServiceImporter;
 import io.vertx.servicediscovery.types.HttpEndpoint;
-import kpi.ipt.labs.distributed.vertx.NamesConstants;
+import kpi.ipt.labs.distributed.vertx.logger.NamesLogger;
 
 
 public class ServiceDiscoveryTesting {

@@ -1,9 +1,11 @@
-package kpi.ipt.labs.distributed.vertx.client;
+package kpi.ipt.labs.distributed.vertx.logger;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+import kpi.ipt.labs.distributed.vertx.client.NamesClient;
 
 public class NamesLogger extends AbstractVerticle {
 
@@ -18,8 +20,9 @@ public class NamesLogger extends AbstractVerticle {
     }
 
     @Override
-    public void start() throws Exception {
+    public void start(Future<Void> completeFuture) throws Exception {
         this.timerId = getVertx().setPeriodic(DELAY, this::printNames);
+        this.namesClient.start(completeFuture);
     }
 
     private void printNames(long id) {
@@ -36,7 +39,7 @@ public class NamesLogger extends AbstractVerticle {
 
     @Override
     public void stop() throws Exception {
-        this.namesClient.close();
         getVertx().cancelTimer(this.timerId);
+        this.namesClient.stop();
     }
 }

@@ -8,32 +8,52 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import kpi.ipt.labs.distributed.vertx.NamesConstants;
 
 import java.util.Collections;
 
-public class NamesClient {
+public abstract class NamesClient {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(NamesClient.class);
 
     private static final String CIRCUIT_BREAKER_NAME = "get-names-circuit-breaker";
 
+    protected final Vertx vertx;
     private HttpClient client;
     private CircuitBreaker circuitBreaker;
 
-    public NamesClient(HttpClient client, Vertx vertx) {
-        this.client = client;
-        this.circuitBreaker = CircuitBreaker.create(CIRCUIT_BREAKER_NAME, vertx, defaultCircuitBreakerOptions());
+    public NamesClient(Vertx vertx) {
+        this.vertx = vertx;
     }
 
-    public NamesClient(String defaultHost, int defaultPort, Vertx vertx) {
-        this(vertx.createHttpClient(defaultClientOptions(defaultHost, defaultPort)), vertx);
+    public void start(Future<Void> completeFuture) throws Exception {
+        CircuitBreakerOptions options = defaultCircuitBreakerOptions();
+        this.circuitBreaker = CircuitBreaker.create(CIRCUIT_BREAKER_NAME, vertx, options);
+
+        getHttpClient().setHandler(clientResult -> {
+            if (clientResult.succeeded()) {
+                client = clientResult.result();
+                completeFuture.complete();
+            } else {
+                LOGGER.error("Names-service not found");
+                completeFuture.fail(clientResult.cause());
+            }
+        });
     }
 
-    public void close() {
-        client.close();
+    protected abstract Future<HttpClient> getHttpClient();
+
+    public void stop() {
+        if (client != null) {
+            client.close();
+        }
+
+        circuitBreaker.close();
     }
 
     public void addName(String name, Handler<AsyncResult<Void>> handler) {
@@ -88,11 +108,5 @@ public class NamesClient {
                 .setTimeout(1000)
                 .setFallbackOnFailure(true)
                 .setResetTimeout(10000);
-    }
-
-    private static HttpClientOptions defaultClientOptions(String defaultHost, int defaultPort) {
-        return new HttpClientOptions()
-                .setDefaultHost(defaultHost)
-                .setDefaultPort(defaultPort);
     }
 }
